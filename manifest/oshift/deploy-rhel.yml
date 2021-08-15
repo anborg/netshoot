@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: denteam-kubetool #{APP_TEAM}-{APP}
+  labels:
+    app: denteam-kubetool
+    org: denteam
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: denteam-kubetool
+  template:
+    metadata:
+      labels:
+        app: denteam-kubetool
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - denteam-kubetool
+              topologyKey: "kubernetes.io/hostname"
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - denteam-kubetool
+                topologyKey: failure-domain.ford.com/zone
+      serviceAccountName: default
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name:  denteam-image-repo-secret #{APPTEAM}-
+      containers:
+        - name: denteam-kubetool
+#          image: registry.ford.com/den-org/kubetool:0.0.1-build-2-gef0de0c
+#          image: registry.redhat.io/rhel8/support-tools
+          image: registry.ford.com/den-org/diagtool
+          imagePullPolicy: Always
+          stdin: true
+          tty: true
+#          ports:
+#            - name: http
+#              containerPort: 8080
+          env:
+            #- name: TLS_CERT
+            #  value: /etc/tls/tls.crt
+            #- name: TLS_KEY
+            #  value: /etc/tls/tls.key
+            - name: TCP_PORT
+              value: "8080"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+          resources:
+            requests:
+              memory: "2500Mi"
+              cpu: "2500m"
+            limits:
+              memory: "5000Mi"
+              cpu: "5000m"
+

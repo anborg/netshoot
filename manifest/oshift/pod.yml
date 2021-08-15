@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: denteam-toolpod1
+#  namespace: {TARGET-NAMESPACE or all}
+spec:
+  containers:
+    - name: denteam-toolpod1
+      image: registry.redhat.io/rhel8/support-tools
+      stdin: true
+      tty: true
